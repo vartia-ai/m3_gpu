@@ -12,6 +12,9 @@ as one diff against Gravity Mesa commit `87ac51d411f0e58a9433567ec2666f457be89e1
   (partial renders let a render hold more geometry than the tiler buffer;
   renders have no primitive or draw cap by default);
 - external textures (needed by Hyprland);
+- instanced vertex attributes, flat varyings, R8 GPU-tiled render targets,
+  and render-target allocations padded to the size the kernel checks (what
+  Firefox's WebRender and niri/Smithay need; `tools/gl-test/g15-gl-webrender`);
 - environment switches (`ASAHI_G15_*`) for experiments and diagnostics.
 
 The public patch omits one private diagnostic (loading macOS-compiled

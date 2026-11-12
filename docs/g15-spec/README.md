@@ -13,7 +13,7 @@ what is different on G15.
 | Firmware boot, channels, events | Working |
 | Compute (VM_BIND buffers, Mesa-shaped submits) | Working |
 | MMU-fault and firmware-timeout recovery | Working, without a reboot |
-| Render: Mesa VS/FS, uniforms, textures (fragment and vertex), clears, reload/store programs, depth (D32F, D16), stencil, depth-only passes, mip-level targets | Working: linear and GPU-tiled RGBA8 and BGRA8 targets up to 8192x8192 |
+| Render: Mesa VS/FS, uniforms, textures (fragment and vertex), clears, reload/store programs, depth (D32F, D16), stencil, depth-only passes, mip-level targets | Working: linear and GPU-tiled RGBA8 and BGRA8 targets up to 8192x8192, GPU-tiled R8; instanced draws, flat varyings |
 | Render setup | Derived from the command plus constants documented per field (see [Render jobs](30-render.md#where-render-state-comes-from)); no captured bundle at render time |
 | Per-tile list limit (G2) | Fixed: the cause was bit 0 of the Fragment ISP control word `0x15021`, which the kernel now clears in every render. Renders have no primitive or draw cap. See [Known limits](70-known-limits.md) |
 | Partial renders | Working with Mesa's reload/store programs: a 262,144-triangle render runs 4 partial renders (as macOS does) with exact colour and depth |

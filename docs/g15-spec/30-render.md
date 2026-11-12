@@ -222,10 +222,11 @@ page metrics (TA 0x1c910).
 
 | Fact | Tag |
 |---|---|
-| Format: RGBA8, BGRA8 (and their X variants for scanout) UNORM, linear or uncompressed GPU-tiled, 1 layer, 1 sample. Mip levels above 0 for GPU-tiled targets: the attachment is the whole mip tree and the tile programs' descriptors address the level (texture lod, PBE level field at descriptor word 21 bits 4..), exact for every level to 8192x8192 [HW]. Channel order and tiling are carried by the PBE/texture descriptors of the tile programs; no command field changes | [HW] |
+| Format: RGBA8, BGRA8 (and their X variants for scanout) UNORM, linear or uncompressed GPU-tiled, 1 layer, 1 sample; R8 UNORM uncompressed GPU-tiled (the background and end-of-tile programs follow the tilebuffer layout for any format; clear and draw values exact at 32x32, 1024x64, 3x770, 4096x16 and 2048x2048 [HW]). Mip levels above 0 for GPU-tiled targets: the attachment is the whole mip tree and the tile programs' descriptors address the level (texture lod, PBE level field at descriptor word 21 bits 4..), exact for every level to 8192x8192 [HW]. Channel order and tiling are carried by the PBE/texture descriptors of the tile programs; no command field changes | [HW] |
 | Size: each side 1..8192 (`g15_render_max_dim`, up to 16384 accepted). Exact at 128x128, 160x160, 256x256, 200x120, 512x512, 1024x768, 1920x1080, 2560x1664, 4096x4096, 5120x3328 and 8192x8192. The attachment range must fit 256 MiB (`DRM_ASAHI_G15_RENDER_USER_RT_MAX_SIZE`), so 16384x16384 RGBA8 is refused | [HW] at those sizes |
 | Depth-only passes (no colour attachment): Mesa binds a scratch RGBA8 target of the pass's size and discards its contents; exact with Z32F and Z16 | [HW] |
 | Stride: `align(width * 4, 128)` bytes (Mesa's AGX linear layout). At 200 wide this is 896, where Metal used 800 | [HW] |
+| Allocation: the kernel takes a target only if its attachment holds `align(width * 4, 128) * height` bytes (`render_input.rs` `target_size`), whatever the format. A narrow GPU-tiled texture is smaller (3x770 RGBA8: 16 KiB against 96 KiB) and its renders were EINVAL, so Mesa pads render-target allocations of formats up to 4 bytes per pixel to that size; layout and offsets are unchanged | [HW] |
 | TPC, tilemap and heap metadata follow the tree's TileInfo formulas (TPC 0x800 at 128, 0x1000 at 513x257 natively, 0xa000 at 2560x1664); the TA command's TPC size (+0x768) is the allocation's length | [NATIVE] to 513x257, [HW] exact images to 2560x1664 |
 | The target address reaches the GPU only through the tile programs' descriptors (background texture, partial-background texture, end-of-tile PBE). There is no render-target register | [HW] |
 | The target is an ordinary user VM_BIND RW buffer (Mesa allocates it from its main heap); it need not be in the USC or render-context window | [HW] |
@@ -412,7 +413,7 @@ as the tests reach [HW], but their meaning is [UNKNOWN].
   occasionally hit a firmware timeout with no partial render, although the
   same programs complete in most frames. Not seen since the tiling geometry
   and HwDataB +0xa74 fixes; unconfirmed whether they were the cause. [UNKNOWN]
-- MSAA, layered targets, formats other than RGBA8/BGRA8, compression.
+- MSAA, layered targets, formats other than RGBA8/BGRA8/R8, compression.
   [UNKNOWN]
 - How G15 takes vertex/fragment helper (scratch) programs and the sampler
   heap; the native lists have no register for either. [UNKNOWN]

@@ -16,8 +16,8 @@ base=236788cd2602a24c703fe7bdaddaf73ef77d2027  # AsahiLinux/linux asahi-wip-7.2,
 # Tree after the 8 base patches, after the G15 patch, and after the J613
 # external display patch. A mismatch means the source is not what was tested.
 base_tree=383716fbbb1d469efd91069729c06f55e3e327bf
-g15_tree=bd8e4f7dcc987fb5dbf2e3245501fcaaa27c7f10
-display_tree=205560425730dd1aeb48bab8eb8bfd9bf8c7203f
+g15_tree=156d4e5d6f4c638177be5fd70f848e0d18a87fd9
+display_tree=aea3961b0f123a581b78a2323706af304fbc525f
 
 mkdir -p "$work"
 src=$work/linux

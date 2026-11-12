@@ -39034,7 +39034,7 @@ index 000000000..e33e40e44
 +    }
 +}
 diff --git a/drivers/gpu/drm/asahi/queue/mod.rs b/drivers/gpu/drm/asahi/queue/mod.rs
-index 85da1d539..a1369ff59 100644
+index 85da1d539..e9af3337d 100644
 --- a/drivers/gpu/drm/asahi/queue/mod.rs
 +++ b/drivers/gpu/drm/asahi/queue/mod.rs
 @@ -9,15 +9,23 @@
@@ -42177,7 +42177,7 @@ index 85da1d539..a1369ff59 100644
 +    /// at least 64 pixels on each side; D16 128x64 per page, at least 128
 +    /// wide) must lie inside one of the command's
 +    /// attachments, which `g15_check_attachments` checked against the VM.
-+    /// Smaller targets use another layout and are ENODEV.
++    /// Smaller targets must use that page layout too (Mesa pads them).
 +    // G15-only; the other generations compile it without a caller.
 +    #[allow(dead_code)]
 +    fn g15_check_depth(regs: &crate::render_input::G15UserRegFields, attachments: &[u8]) -> Result {
@@ -42189,9 +42189,9 @@ index 85da1d539..a1369ff59 100644
 +            2 => 128,
 +            _ => return Err(ENODEV),
 +        };
-+        if w < page_w || h < 64 {
-+            return Err(ENODEV);
-+        }
++        // Renders narrower than a page (or shorter than 64) use a depth buffer
++        // that Mesa lays out as a full page in each direction, so the page count
++        // below (at least one per direction) covers it; no early ENODEV.
 +        let bytes = w.div_ceil(page_w) * h.div_ceil(64) * 0x4000;
 +        let end = regs.depth_base.checked_add(bytes).ok_or(EINVAL)?;
 +        let mut list = Reader::new(attachments);
@@ -45279,10 +45279,10 @@ index e40adb7b1..7ea6124ca 100644
 +}
 diff --git a/drivers/gpu/drm/asahi/render_input.rs b/drivers/gpu/drm/asahi/render_input.rs
 new file mode 100644
-index 000000000..dbca4bd81
+index 000000000..72f0f4f9c
 --- /dev/null
 +++ b/drivers/gpu/drm/asahi/render_input.rs
-@@ -0,0 +1,1290 @@
+@@ -0,0 +1,1292 @@
 +// SPDX-License-Identifier: GPL-2.0-only OR MIT
 +
 +//! User render inputs for the private J613 G15 experiment.
@@ -45606,7 +45606,9 @@ index 000000000..dbca4bd81
 +    regs.depth_base = le(&cmd[core::mem::offset_of!(R, depth)..][..8]);
 +    regs.stencil_base = stencil_base;
 +    let zs = regs.depth_base != 0 || regs.stencil_base != 0;
-+    if regs.depth_base & 0x7f != 0 || regs.stencil_base & 0x7f != 0 || zs != (regs.isp_zls_pixels != 0) {
++    // ISP_ZLS_PIXELS packs (width - 1, height - 1), so a 1x1 depth render is 0
++    // too; only a nonzero value without a depth/stencil buffer is refused.
++    if regs.depth_base & 0x7f != 0 || regs.stencil_base & 0x7f != 0 || (!zs && regs.isp_zls_pixels != 0) {
 +        return Err(EINVAL);
 +    }
 +    // ZLS control: S load (bit 14) / store (bit 18) and S compression

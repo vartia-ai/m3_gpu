@@ -102,8 +102,8 @@ The Linux G15 graphics path currently accepts a bounded subset:
 |---|---|---|
 | Vertex outputs | Four-component position plus up to 96 scalar varyings | [INFERRED]; 39 varying scalars [HW] |
 | Fragment outputs | One colour render target; one sample | [HW] |
-| Interpolation | Smooth perspective and non-perspective (`linear`) interpolation | [HW] |
-| Buffers | API UBOs, vertex buffers and the private sysval buffer; at most 32 table entries | [HW] for used forms; limit [INFERRED] |
+| Interpolation | Smooth perspective, non-perspective (`linear`) and flat interpolation (float and integer; the last vertex provokes, as GLES requires) | [HW] |
+| Buffers | API UBOs, vertex buffers and the private sysval buffer; vertex stages also the draw-parameter table (binding 241, `AGX_SYSVAL_TABLE_PARAMS`), which instanced attribute fetch reads for the base instance; at most 32 table entries | [HW] for used forms; limit [INFERRED] |
 | Texture resources | Textures and samplers in fragment shaders; bounded explicit-LOD texture sampling in vertex shaders | [HW] |
 | Stores | Fragment image block stores are admitted for the internal tile store helper; general graphics SSBO stores are rejected | [HW] for the helper; general restriction [INFERRED] |
 | Scratch | Vertex and fragment scratch are rejected | [INFERRED] |
@@ -113,8 +113,10 @@ The Linux G15 graphics path currently accepts a bounded subset:
 | Other rejected inputs or outputs | Tile reads, fragment Z reads, primitive ID, point size, layer/viewport and point coordinates | [INFERRED] |
 
 The render path currently requires a four-component vertex position and one
-fragment colour output. Flat varying masks remain outside the qualified G15
-profile. [INFERRED]
+fragment colour output. Flat varyings use the per-component encoding of
+`apple9_build_cf_bindings` (shade 0/2 for the first/last provoking vertex)
+and are on by default; an `ASAHI_G15_ALLOW` list without `flat` turns them
+off, as for `linear`. [HW]
 
 ## 5. Compute frontend
 
@@ -199,4 +201,4 @@ per-tile list limit first (fixed; see
 | What are the G15 hardware limits for publications, varyings, resource tables and launch allocation? | [UNKNOWN] |
 | Which launch control fields differ by stage beyond the values already observed? | [UNKNOWN] |
 | How are scratch, general SSBO writes, larger compute grids, indirect dispatch, threadgroup memory and compute textures launched on G15? | [UNKNOWN] |
-| Do flat varyings, multiple render targets, MSAA and the remaining graphics inputs/outputs require only compiler work or additional submission state? | [UNKNOWN] |
+| Do multiple render targets, MSAA and the remaining graphics inputs/outputs require only compiler work or additional submission state? | [UNKNOWN] |
